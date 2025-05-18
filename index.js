@@ -156,8 +156,4 @@ function checkIfSolvedCorrectly(qObj, userAnswer) {
   return validateAnswer(qObj, userAnswer);
 }
 
-module.exports = {
-  generateRandomMathQuestion,
-  validateAnswer,
-  checkIfSolvedCorrectly
-};
+export { generateRandomMathQuestion, validateAnswer, checkIfSolvedCorrectly };
