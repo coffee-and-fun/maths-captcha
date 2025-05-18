@@ -1,6 +1,9 @@
 {
   "name": "@coffeeandfun/maths-captcha",
-  "version": "1.2.0",
+  "version": "1.2.1",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Maths-Captcha is a simple Node.js module that generates random math questions to verify human interaction. It creates math problems like addition, subtraction, multiplication, and division, and checks if the user's answer is correct. Ideal for adding a quick and fun CAPTCHA alternative to your forms or apps.",
   "main": "index.js",
   "type": "module",
