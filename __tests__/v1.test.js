@@ -1,9 +1,9 @@
-// mathQuiz.test.js
-const {
-  generateRandomMathQuestion,
+
+
+import {   generateRandomMathQuestion,
   validateAnswer,
-  checkIfSolvedCorrectly,
-} = require("../index");
+  checkIfSolvedCorrectly, } from '../index.js';
+
 
 describe("Math Quiz Module", () => {
   test("should generate a valid math question", () => {
