@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.5](https://github.com/coffee-and-fun/maths-captcha/compare/maths-captcha-v3.1.4...maths-captcha-v3.1.5) (2026-04-20)
+
+
+### Bug Fixes
+
+* etc etc ([aaf411c](https://github.com/coffee-and-fun/maths-captcha/commit/aaf411c2f02b8969deecbf47b76b0c5f522a3c4e))
+
 ## [3.1.4](https://github.com/coffee-and-fun/maths-captcha/compare/maths-captcha-v3.1.3...maths-captcha-v3.1.4) (2026-04-20)
 
 
