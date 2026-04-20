@@ -1,360 +1,385 @@
 # 🧮 @coffeeandfun/maths-captcha
 
-**A simple, fun way to verify humans with math problems!**
+A small Node.js library that generates simple maths questions and checks the answers. Use it as a friendly alternative to image based CAPTCHAs. ✨
 
-@coffeeandfun/maths-captcha is a lightweight Node.js module that creates random math questions and checks user answers. It's perfect for replacing traditional CAPTCHAs with something more engaging and accessible. Instead of squinting at distorted text, your users solve simple math problems like "What's 7 + 3?"
+Examples of what it can ask:
+
+- `7 + 3`
+- `25% of 80`
+- `√64`
+- `2x + 3 = 11`
+- `2, 4, 6, 8, ?`
+
+It runs in plain JavaScript. There are no servers to call, no images to load, and no fonts to download.
 
 ---
 
-
-## 📦 Installation
-
-Getting started is super easy! Just install via npm:
+## 📦 Install
 
 ```bash
 npm install @coffeeandfun/maths-captcha
 ```
 
----
-
-## 🏃‍♂️ Quick Start
-
-Here's how to get up and running in under 30 seconds:
-
-```javascript
-// Import the functions you need
-import { generateRandomMathQuestion, validateAnswer } from '@coffeeandfun/maths-captcha';
-
-// 1. Generate a math question
-const question = generateRandomMathQuestion();
-console.log(`Question: ${question.question}`);
-// Output: "Question: 7 + 3"
-
-// 2. Get the user's answer (from a form, input, etc.)
-const userAnswer = "10"; // This would come from user input
-
-// 3. Check if they got it right
-const isCorrect = validateAnswer(question, userAnswer);
-console.log(`Correct: ${isCorrect}`);
-// Output: "Correct: true"
-```
-
-### 🌟 Real-World Example
-
-```javascript
-const express = require('express');
-const { generateRandomMathQuestion, validateAnswer } = require('@coffeeandfun/maths-captcha');
-
-const app = express();
-
-// Generate a question for the user
-app.get('/captcha', (req, res) => {
-  const question = generateRandomMathQuestion();
-  req.session.captcha = question; // Store in session
-  res.json({ question: question.question });
-});
-
-// Verify the user's answer
-app.post('/verify', (req, res) => {
-  const userAnswer = req.body.answer;
-  const isCorrect = validateAnswer(req.session.captcha, userAnswer);
-  
-  if (isCorrect) {
-    res.json({ success: true, message: "Correct! You're human! 🎉" });
-  } else {
-    res.json({ success: false, message: "Try again! 🤔" });
-  }
-});
-```
+Requires Node.js 16 or newer.
 
 ---
 
-## 📚 Complete API Reference
+## 🚀 Quick start
 
-### Core Functions
+```js
+import {
+  generateRandomMathQuestion,
+  validateAnswer,
+} from '@coffeeandfun/maths-captcha';
 
-#### `generateRandomMathQuestion(precision?)`
-Creates a random math question with smart defaults.
-
-```javascript
 const question = generateRandomMathQuestion();
-console.log(question);
-// {
-//   question: "15 + 8",
-//   answer: "23",
-//   numericAnswer: 23,
-//   operation: "+",
-//   operands: [15, 8]
-// }
+console.log(question.question);
+// "7 + 3"
+
+const isCorrect = validateAnswer(question, '10');
+console.log(isCorrect);
+// true
 ```
 
-**Parameters:**
-- `precision` (optional): Number of decimal places for division (default: 2)
+That's the whole loop: generate a question, show it to the user, then check what they typed.
 
-**Returns:** Question object with all the details you need
+---
 
-#### `validateAnswer(question, userAnswer)`
-Checks if the user's answer is correct (strict mode for backward compatibility).
+## 📝 What you get back
 
-```javascript
-const question = { question: "10 + 5", answer: "15" };
+Every question is a plain object with the same shape:
 
-validateAnswer(question, "15");    // ✅ true
-validateAnswer(question, "15.0");  // ❌ false (strict integer mode)
-validateAnswer(question, "16");    // ❌ false
+```js
+{
+  question: '7 + 3',     // The text to show the user
+  answer: '10',          // The correct answer as a string
+  numericAnswer: 10,     // The correct answer as a number
+  operation: '+',        // The operator or category
+  operands: [7, 3],      // The numbers used to build the question
+  type: 'arithmetic',    // Which question type produced it
+}
 ```
 
-#### `validateAnswerFlexible(question, userAnswer)`
-More user-friendly validation that accepts different formats.
+Some types add a `style` field (for example, `square`, `cube`, `geometric`).
 
-```javascript
-const question = { 
-  question: "10 / 4", 
-  answer: "2.50",
-  numericAnswer: 2.5,
-  operation: "/"
-};
+---
 
-validateAnswerFlexible(question, "2.5");     // ✅ true
-validateAnswerFlexible(question, "2.50");    // ✅ true  
-validateAnswerFlexible(question, "2.500");   // ✅ true
-validateAnswerFlexible(question, "2.49");    // ❌ false
-```
+## 🎲 Question types
 
-### Advanced Features
+By default the library only asks basic arithmetic. You can switch on more types when you want harder or more varied questions.
 
-#### `generateMultipleQuestions(count, precision?)`
-Generate several questions at once.
+| Type         | Example          | Notes                                |
+| ------------ | ---------------- | ------------------------------------ |
+| `arithmetic` | `7 + 3`          | `+` `-` `*` `/` and `%` (modulo)     |
+| `power`      | `5^2`, `√64`     | Squares, cubes, perfect square roots |
+| `percentage` | `25% of 80`      | Always whole-number answers          |
+| `pemdas`     | `(2 + 3) * 4`    | Order of operations                  |
+| `solve-x`    | `2x + 3 = 11`    | Solve for `x`                        |
+| `sequence`   | `2, 4, 6, 8, ?`  | Arithmetic and geometric patterns    |
 
-```javascript
-const questions = generateMultipleQuestions(3);
-// Returns array of 3 question objects
-```
+Turn on extra types with `setConfig`:
 
-#### `generateQuestionWithConstraints(options)`
-Create questions with specific requirements.
+```js
+import {
+  setConfig,
+  generateRandomMathQuestion,
+} from '@coffeeandfun/maths-captcha';
 
-```javascript
-const easyQuestion = generateQuestionWithConstraints({
-  operations: ['+', '-'],        // Only addition and subtraction
-  numberRange: { min: 1, max: 20 }, // Small numbers only
-  maxResult: 50                  // Keep results under 50
+setConfig({
+  QUESTION_TYPES: ['arithmetic', 'power', 'percentage', 'solve-x'],
 });
+
+const question = generateRandomMathQuestion();
+// e.g. { question: '√64', answer: '8', type: 'power', style: 'sqrt', ... }
 ```
 
-#### `validateAnswerWithFeedback(question, userAnswer)`
-Get detailed information about why validation failed.
+---
 
-```javascript
-const result = validateAnswerWithFeedback(question, "wrong");
-console.log(result);
+## ✅ Checking answers
+
+There are three ways to check an answer. Pick the one that fits how strict you want to be.
+
+### `validateAnswer(question, userAnswer)`
+
+Strict. Whole numbers must be typed as whole numbers.
+
+```js
+validateAnswer({ answer: '15' }, '15');    // ✅ true
+validateAnswer({ answer: '15' }, '15.0');  // ❌ false
+validateAnswer({ answer: '15' }, '16');    // ❌ false
+```
+
+### `validateAnswerFlexible(question, userAnswer)`
+
+Friendly. Accepts the same number written different ways.
+
+```js
+const q = { answer: '4.00', numericAnswer: 4, operation: '/' };
+
+validateAnswerFlexible(q, '4');     // ✅ true
+validateAnswerFlexible(q, '4.0');   // ✅ true
+validateAnswerFlexible(q, '4.00');  // ✅ true
+validateAnswerFlexible(q, '3.99');  // ❌ false
+```
+
+### `validateAnswerWithFeedback(question, userAnswer)`
+
+Returns an object that explains the result. Useful when you want to show the user why their answer was wrong.
+
+```js
+validateAnswerWithFeedback(question, 'abc');
 // {
 //   isValid: false,
-//   reason: "Invalid numeric format",
-//   userInput: "wrong",
-//   expected: "15"
+//   reason: 'Invalid numeric format',
+//   userInput: 'abc',
+//   expected: '10'
 // }
 ```
 
-#### `getQuestionStats(question)`
-Analyze question difficulty and properties.
+### Batch checks
 
-```javascript
-const stats = getQuestionStats(question);
-console.log(stats);
-// {
-//   difficulty: 4,        // Scale of 1-10
-//   hasDecimals: false,
-//   operands: { num1: 15, num2: 8 },
-//   operation: "+",
-//   result: 23
-// }
+If you have many answers to check at once:
+
+```js
+validateAnswers([
+  { question: q1, answer: '10' },
+  { question: q2, answer: '7' },
+]);
+// [
+//   { question: '5 + 5', isValid: true, expectedAnswer: '10' },
+//   { question: '14 - 7', isValid: true, expectedAnswer: '7' },
+// ]
 ```
-
-### Configuration
-
-#### `setConfig(options)` & `getConfig()`
-Customize the behavior to fit your needs.
-
-```javascript
-const { setConfig, getConfig } = require('maths-captcha');
-
-// Customize settings
-setConfig({
-  DIVISION_PRECISION: 3,           // 3 decimal places for division
-  NUMBER_RANGE: { min: 1, max: 50 }, // Smaller numbers
-  OPERATIONS: ['+', '-', '*'],     // No division
-  AVOID_NEGATIVE_RESULTS: true     // Keep results positive
-});
-
-// Check current settings
-const config = getConfig();
-console.log(config);
-```
-
-### Utility Functions
-
-#### `normalizeNumericString(str)`
-Clean up numeric strings by removing trailing zeros.
-
-```javascript
-normalizeNumericString("5.00");    // "5"
-normalizeNumericString("3.40");    // "3.4"
-```
-
-#### `checkIfSolvedCorrectly(question, userAnswer)`
-Alias for `validateAnswer()` - same functionality.
 
 ---
 
-## 🎨 Customization Examples
+## ⚙️ Configuration
 
-### Easy Mode (Addition & Subtraction Only)
-```javascript
-setConfig({
-  OPERATIONS: ['+', '-'],
-  NUMBER_RANGE: { min: 1, max: 20 },
-  AVOID_NEGATIVE_RESULTS: true
-});
-```
+```js
+import {
+  setConfig,
+  getConfig,
+  resetConfig,
+} from '@coffeeandfun/maths-captcha';
 
-### Hard Mode (Larger Numbers & Division)
-```javascript
 setConfig({
-  NUMBER_RANGE: { min: 10, max: 100 },
   DIVISION_PRECISION: 3,
-  OPERATIONS: ['+', '-', '*', '/']
+  NUMBER_RANGE: { min: 1, max: 50 },
+  OPERATIONS: ['+', '-', '*'],
+  QUESTION_TYPES: ['arithmetic', 'power'],
+  AVOID_NEGATIVE_RESULTS: true,
+  AVOID_DIVISION_BY_ZERO: true,
 });
+
+getConfig();   // Read the current settings
+resetConfig(); // Restore the defaults
 ```
 
-### Kid-Friendly Mode
-```javascript
+### Default settings
+
+| Option                   | Default                |
+| ------------------------ | ---------------------- |
+| `DIVISION_PRECISION`     | `2`                    |
+| `NUMBER_RANGE`           | `{ min: 1, max: 100 }` |
+| `OPERATIONS`             | `['+', '-', '*', '/']` |
+| `QUESTION_TYPES`         | `['arithmetic']`       |
+| `AVOID_NEGATIVE_RESULTS` | `true`                 |
+| `AVOID_DIVISION_BY_ZERO` | `true`                 |
+| `MAX_ATTEMPTS`           | `10`                   |
+| `TOLERANCE`              | `1e-10`                |
+
+### Difficulty examples
+
+Easy mode for kids:
+
+```js
 setConfig({
+  QUESTION_TYPES: ['arithmetic'],
   OPERATIONS: ['+'],
   NUMBER_RANGE: { min: 1, max: 10 },
-  AVOID_NEGATIVE_RESULTS: true
+});
+```
+
+Harder mode for adults:
+
+```js
+setConfig({
+  QUESTION_TYPES: ['arithmetic', 'pemdas', 'solve-x', 'sequence'],
+  NUMBER_RANGE: { min: 1, max: 50 },
 });
 ```
 
 ---
 
-## 🔧 Framework Integration
+## 📚 Generating in bulk
 
-### Express.js
-```javascript
-app.use(session({ secret: 'your-secret' }));
+```js
+import { generateMultipleQuestions } from '@coffeeandfun/maths-captcha';
+
+const ten = generateMultipleQuestions(10);
+```
+
+## 🎯 Generating with limits
+
+If you need a question that fits specific bounds:
+
+```js
+import { generateQuestionWithConstraints } from '@coffeeandfun/maths-captcha';
+
+const easy = generateQuestionWithConstraints({
+  operations: ['+'],
+  numberRange: { min: 1, max: 10 },
+  maxResult: 20,
+});
+```
+
+If the library cannot produce a question that fits, it throws. Wrap the call in a `try` block if you want to handle that.
+
+---
+
+## 🔌 Adding your own question type
+
+You can plug in your own generator. It just needs to return a question object in the standard shape.
+
+```js
+import {
+  registerQuestionType,
+  setConfig,
+  generateRandomMathQuestion,
+} from '@coffeeandfun/maths-captcha';
+
+registerQuestionType('double', () => {
+  const n = Math.floor(Math.random() * 20) + 1;
+  return {
+    question: `Double ${n}`,
+    answer: String(n * 2),
+    numericAnswer: n * 2,
+    operation: 'custom',
+    operands: [n],
+    type: 'double',
+  };
+});
+
+setConfig({ QUESTION_TYPES: ['double'] });
+
+generateRandomMathQuestion();
+// { question: 'Double 7', answer: '14', ... }
+```
+
+To remove it later:
+
+```js
+import { unregisterQuestionType } from '@coffeeandfun/maths-captcha';
+unregisterQuestionType('double');
+```
+
+To see every type that is currently available:
+
+```js
+import { listQuestionTypes } from '@coffeeandfun/maths-captcha';
+listQuestionTypes();
+// ['arithmetic', 'power', 'percentage', 'pemdas', 'solve-x', 'sequence', 'double']
+```
+
+---
+
+## 🌐 Using it with Express
+
+Generate the question on the server and store it in the session. Validate the answer on the server too. Never trust the client to check itself.
+
+```js
+import express from 'express';
+import session from 'express-session';
+import {
+  generateRandomMathQuestion,
+  validateAnswer,
+} from '@coffeeandfun/maths-captcha';
+
+const app = express();
+app.use(express.json());
+app.use(session({
+  secret: 'change-me',
+  resave: false,
+  saveUninitialized: true,
+}));
 
 app.get('/captcha', (req, res) => {
   const question = generateRandomMathQuestion();
   req.session.captcha = question;
-  res.render('form', { question: question.question });
+  res.json({ question: question.question });
+});
+
+app.post('/verify', (req, res) => {
+  const correct = validateAnswer(req.session.captcha, req.body.answer);
+  res.json({ correct });
 });
 ```
 
-### React/Next.js
-```javascript
-const [captcha, setCaptcha] = useState(null);
+---
 
-useEffect(() => {
-  // Generate question on component mount
-  const question = generateRandomMathQuestion();
-  setCaptcha(question);
-}, []);
+## 📖 API reference
 
-const handleSubmit = (userAnswer) => {
-  if (validateAnswerFlexible(captcha, userAnswer)) {
-    // Success!
-  }
-};
-```
+### Generators
 
-### Vue.js
-```javascript
-data() {
-  return {
-    captcha: null,
-    userAnswer: ''
-  }
-},
-created() {
-  this.captcha = generateRandomMathQuestion();
-},
-methods: {
-  checkAnswer() {
-    return validateAnswer(this.captcha, this.userAnswer);
-  }
-}
-```
+| Function                                              | What it does                                      |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| `generateRandomMathQuestion(precisionOrConfig?)`      | Returns one question.                             |
+| `generateMultipleQuestions(count, precisionOrConfig?)`| Returns an array of questions.                    |
+| `generateQuestionWithConstraints(constraints)`        | Returns a question that fits the given limits.    |
+| `registerQuestionType(name, generator)`               | Adds your own question type.                      |
+| `unregisterQuestionType(name)`                        | Removes a custom question type.                   |
+| `listQuestionTypes()`                                 | Lists every available type.                       |
+
+### Validators
+
+| Function                                  | What it does                                     |
+| ----------------------------------------- | ------------------------------------------------ |
+| `validateAnswer(question, answer)`        | Strict check. Returns `true` or `false`.         |
+| `validateAnswerStrict(question, answer)`  | The same as `validateAnswer`. Kept for clarity.  |
+| `validateAnswerFlexible(question, answer)`| Accepts equivalent decimal forms.                |
+| `validateAnswerWithFeedback(question, a)` | Returns an object explaining the result.         |
+| `validateAnswers(pairs)`                  | Checks many `{ question, answer }` pairs at once.|
+| `checkIfSolvedCorrectly(question, answer)`| Alias for `validateAnswer`.                      |
+
+### Configuration
+
+| Function          | What it does                                |
+| ----------------- | ------------------------------------------- |
+| `getConfig()`     | Returns a copy of the current settings.     |
+| `setConfig(obj)`  | Merges `obj` into the active settings.      |
+| `resetConfig()`   | Restores the default settings.              |
+
+### Helpers
+
+| Function                          | What it does                                                           |
+| --------------------------------- | ---------------------------------------------------------------------- |
+| `getQuestionStats(question)`      | Returns `{ operands, result, operation, difficulty, hasDecimals }`.    |
+| `calculateDifficulty(question)`   | Returns a difficulty score from 1 to 10.                               |
+| `normalizeNumericString(value)`   | Trims trailing zeros from a numeric string. For example, `5.00` → `5`. |
 
 ---
 
 ## 🧪 Testing
 
-We've included comprehensive tests to ensure everything works perfectly:
-
 ```bash
-npm test
+npm test       # Run every test
+npm run v1     # Run only the version 1 tests
+npm run v2     # Run only the version 2 tests
+npm run v3     # Run only the version 3 tests
 ```
 
-The test suite includes:
-- ✅ 100+ test cases covering all scenarios
-- ✅ Edge case handling (malformed input, large numbers, etc.)
-- ✅ Performance tests (1000+ rapid generations)
-- ✅ Backward compatibility verification
-- ✅ All validation modes tested
+The library ships with 87 tests covering question generation, every validator, edge cases, and the new question types.
 
 ---
 
-## 🤝 Contributing
+## ⬆️ Upgrading from version 2
 
-We love contributions! Here's how you can help:
+Version 3 is a clean rewrite split into small modules. The public API is the same, so existing code keeps working without changes. The new features (extra question types, custom generators, `resetConfig`) are opt in.
 
-1. **🐛 Report Issues**: Found a bug? Let us know!
-2. **💡 Suggest Features**: Have ideas? We'd love to hear them!
-3. **🔧 Submit PRs**: Code improvements are always welcome!
-4. **📖 Improve Docs**: Help make this README even better!
-
-### Development Setup
-```bash
-git clone https://github.com/coffeeandfun/maths-captcha
-cd maths-captcha
-npm install
-npm test
-```
+If you only ever called `generateRandomMathQuestion` and `validateAnswer`, you do not need to change anything.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License. Feel free to use it in your projects!
-
----
-
-## 🙏 Credits
-
-**Coffee & Fun LLC** - Making the web more accessible and enjoyable
-
----
-
-## 📞 Support
-
-Need help? We're here for you!
-
-- 📧 **Email**: Open an issue on GitHub
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/coffeeandfun/maths-captcha/issues)
-- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/coffeeandfun/maths-captcha/discussions)
-
----
-
-## 🌟 Show Your Support
-
-If this project helped you, consider:
-- ⭐ Starring the repository
-- 🐦 Sharing it with others
-- 💝 Contributing to make it even better
-
-## 🧡 License
-
-[MIT](https://opensource.org/licenses/MIT) – because sharing is caring.
-
----
+MIT. See [LICENSE](LICENSE). 🧡
