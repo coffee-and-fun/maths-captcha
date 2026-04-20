@@ -72,12 +72,15 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || needs.release-please.outputs.tag_name }}
       - name: Compare versions
         run: |
-          TAG_VERSION="${TAG_NAME#v}"
+          # Strip everything up to and including the last "v" — handles both
+          # "v3.1.5" and legacy "maths-captcha-v3.1.5" tag formats.
+          TAG_VERSION="${TAG_NAME##*v}"
           PKG_VERSION="$(node -p "require('./package.json').version")"
-          echo "Tag:          $TAG_VERSION"
+          echo "Tag:          $TAG_NAME"
+          echo "Tag version:  $TAG_VERSION"
           echo "package.json: $PKG_VERSION"
           if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "::error::Tag $TAG_NAME does not match package.json version $PKG_VERSION"
+            echo "::error::Tag $TAG_NAME does not resolve to package.json version $PKG_VERSION"
             exit 1
           fi
         env:
