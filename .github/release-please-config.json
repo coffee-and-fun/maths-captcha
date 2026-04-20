@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "@coffeeandfun/maths-captcha",
+      "include-v-in-tag": true,
+      "changelog-path": "CHANGELOG.md",
+      "draft": false,
+      "prerelease": false
+    }
+  }
+}
