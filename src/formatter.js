@@ -12,7 +12,17 @@ export function getDecimalPlaces(numericString) {
 }
 
 export function isEffectivelyZero(numericString) {
-  return /^0*\.?0*$/.test(numericString.replace('-', ''));
+  let sawDot = false;
+  for (const char of numericString) {
+    if (char === '-') continue;
+    if (char === '.') {
+      if (sawDot) return false;
+      sawDot = true;
+      continue;
+    }
+    if (char !== '0') return false;
+  }
+  return true;
 }
 
 export function numbersEqual(a, b, tolerance = 1e-10) {
